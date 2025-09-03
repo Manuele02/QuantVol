@@ -1,0 +1,438 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "6f917996",
+   "metadata": {},
+   "source": [
+    "# Volatility Surface\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ba1d28ab",
+   "metadata": {},
+   "source": [
+    "## Dynamics\n",
+    "\n",
+    "Let us define the following variables: \n",
+    "* S = \"Underlying price\" \n",
+    "* K = \"Strike price\" \n",
+    "* r = \"Interest rate\" \n",
+    "* $\\sigma$ = \"Volatility\"\n",
+    "* T = \"Time to maturity\" \n",
+    "* t = \"Starting time\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c1c3ac0e",
+   "metadata": {},
+   "source": [
+    "Consider a market $\\mathbb{M} = (S^0,S^1)$ with $S^0$ the risk-free price that follows a deterministic dynamic and $S^1$ the risky asset price with the dynamic of a Geometrical Brownian Motion: \n",
+    "$$dS_t^0 = S_t^0(rdt)$$\n",
+    "$$dS_t^1 = S_t^1(\\mu dt+\\sigma dW_t)$$\n",
+    "By integrating both sides from t to T we will find the solution for the former equation. On the other hand, in order to solve the second equation define $f(t,S_t^1) : = Ln S_t^1 \\in \\mathbb{C^{1,2}}$ and apply the Ito formula: \n",
+    "$$  d f\\left(t, S_{t}^{1}\\right)=\\frac{d f\\left(t, S_{t}^{1}\\right)}{\\partial t} d t+\\frac{d f\\left(t, S_{t}^{1}\\right)}{\\partial S_{t}^{1}} \\cdot d S_{t}^{1}+\\frac{1}{2} \\frac{d^{\\prime \\prime} f\\left(t, S_{t}^{1}\\right)}{\\partial \\text { \" } S_{t}^{1}}\\left(d S_{t}^{1}\\right)^{2}  $$\n",
+    "where the first derivative wrt t is 0. Exploiting the Ito table I will also compute the differentials obtaining: \n",
+    "$$  df(t,S_t^1) = \\left(\\mu-\\frac{\\sigma^{2}}{2}\\right) d t+\\sigma d W_{t}  $$\n",
+    "Now, I will integrate both sides from t to T ending up with the final solution for the SDE: \n",
+    "$$ S_{T}^1=S_{t}^1\\cdot\\exp\\left\\{\\left(\\mu-\\frac{\\sigma^2}{2}\\right)(T-t)+\\sigma\\int_{t}^{T}dW_{t}\\right\\} $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "69a961fc",
+   "metadata": {},
+   "source": [
+    "Define $\\phi^0$ and $\\phi^1$ to be the quantities of risk-free and risky asset in the portfolio V: \n",
+    "\n",
+    "$$  V_{t}(\\Phi)=\\phi_{t}^{0} \\cdot S_{t}^{0}+\\phi_{t}^{1} S_{t}^{1}  $$\n",
+    "\n",
+    "with $\\phi^0$ and $\\phi^1$ constants over short-time horizons. The corresponding dynamic will be: \n",
+    "\n",
+    "$$  \n",
+    "dV_{t}(\\Phi) \n",
+    "= \\phi_{t}^{0} \\, dS_{t}^{0} + \\phi_{t}^{1} \\, dS_{t}^{1} \n",
+    "= \\phi_{t}^{0} S_{t}^{0} r \\, dt + \\phi_{t}^{1} \\, dS_{t}^{1}  \n",
+    "$$\n",
+    "\n",
+    "Substituting the dynamic of $S_t^1$ alongside $  \\phi_{t}^{0} S_{t}^{0}=V_{t}(\\Phi)-\\phi_{t}^{1} S_{t}^{1}  $ in the latter equation I will get: \n",
+    "\n",
+    "$$  d V_{t}(\\Phi)=V_{t}(\\Phi) r d t+(\\mu-r) \\phi_{t}^{1} S_{t}^{1} d t+\\phi_{t}^{1} S_{t}^{1} d W_{t}  $$\n",
+    "\n",
+    "Define a replicating portfolio of $V(\\Phi)$, $\\Gamma(t,S_t^1) \\in \\mathbb{C^{1,2}}$ where we are not considering the risk-free dependency according to the latter dynamic. Thus: \n",
+    "$$ d\\Gamma\\left(t,S_{t}^1\\right)=\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial t}dt+\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}dS_{t}^1+\\frac12\\frac{d^{\\prime\\prime}\\Gamma\\left(t,S_{t}^1\\right)}{\\partial^{\\prime\\prime}S_{t}^1}\\left(dS_{t}^1\\right)^2 $$\n",
+    "Expliciting the dynamics and using the Ito table: \n",
+    "\n",
+    "$$ \\Gamma^{\\prime}\\left(t,S_{t}^1\\right)=\\left[\\frac{d\\Gamma\\left[\\left(t,S_{t}^1\\right)\\right.}{\\partial t}+\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}S_{t}^1\\mu+\\frac12\\frac{d^{\\prime\\prime}\\Gamma\\left[\\left(t,S_{t}^1\\right)\\sigma^2\\left(S_{t}^1\\right)^2\\right.}{\\partial\\text{ '' }S_{t}^1}\\right]dt+\\frac{d\\Gamma^{}\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}S_{t}^1\\sigma dW_{t} $$\n",
+    "\n",
+    "By construction, we have $V_t(\\Phi) = \\Gamma(t,S_t^1)$. Hence, their dynamics must coincide. By the uniqueness of the Itô (semimartingale) decomposition, we obtain: \n",
+    "\n",
+    "$$ \\quad\\phi_{t}^1S_{t}^1=\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}\\cdot S_{t}^1\\Rightarrow\\phi_{t}^1=\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1} $$\n",
+    "for the diffusive part that is the so-called delta hedging and points out the replicating portfolio variation due to an underlying price change. Considering the drift part: \n",
+    "$$ V_{t}(\\Phi)r+(\\mu-r)\\phi_{t}^1S_{t}^1=\\frac{d\\Gamma^{}\\left(t,S_{t}^1\\right)}{\\partial t}+\\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}S_{t}^1\\mu+\\frac12\\frac{d^{\\prime\\prime}\\Gamma\\left(t,S_{t}^1\\right)}{\\partial^{\\prime\\prime}S_{t}^2}\\sigma^2\\left(S_{t}^1\\right)^2 $$\n",
+    "\n",
+    "Substituing the diffusion condition in the drift part and wiping of the $\\mu$ term in both sides of the equation we get: \n",
+    "\n",
+    "$$ \\frac{d\\Gamma\\left(t,S_{t}^1\\right)}{\\partial t}+\\frac12\\frac{d^{\\prime\\prime}\\Gamma\\left(t,S_{t}^1\\right)}{d^{\\prime\\prime}S_{t}^1}\\cdot\\left(S_{t}^1\\right)^2\\cdot\\sigma^2+rS_{t}^1\\frac{d\\Gamma^{}\\left(t,S_{t}^1\\right)}{\\partial S_{t}^1}-\\Gamma\\left(t,S_{t}^1\\right)\\cdot r=0 $$\n",
+    "\n",
+    "that is the Kolmogorov PDE under the risk-neutral measure $\\mathbb{Q}$ (The dynamic no longer depends on $\\mu$ but on r only). The solution is thus provided by Feynman-Kac s.t.: \n",
+    "$$ \\Gamma\\left(t,S_{t}^1\\right)=\\mathbb{E}^{\\mathbb{Q}}\\left[e^{-r(T-t)}\\cdot\\Gamma\\left(T,S_{T}^1\\right)\\right] $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9d1f5d5c",
+   "metadata": {},
+   "source": [
+    "# Black-Scholes\n",
+    "\n",
+    "Let us consider a call option s.t. $$  \\Gamma\\left(t, S_{t}^{1}\\right)=\\left(S_{t}^{1}-K\\right)^{+}=\\left(S_{t}^{1}-K\\right) 1 \\varepsilon$$with $\\varepsilon$ that is the exercise set. Following the general framework introduced before I will have $  d S_{t}^{1}  $  that follows a GBM such that $ S_{t}^{1} $ is log-normally distributed depending on the exponential of a gaussian r.v. $  \\left(W_{T}-W_{t}\\right)  $. I want to apply Feynman-Kac in order to price the call above but I need of $S^{1}$ under $\\mathbb{Q}$ before. Define: \n",
+    "$$ \\begin{array}{l}W_{t}=\"\\mathbb{P}-\\text{ Brownian'' }\\\\ \\hat{W}_{t}=\"\\mathbb{Q}-\\text{ Brownian'' }\\\\ \\lambda=\\text{ ''Sharpe Ratio'' }=\\frac{\\mu-r}{\\gamma}\\end{array} $$\n",
+    "and consider the Girsanov's Theorem that will be clearer in a moment: \n",
+    "$$  d {W_{t}}=d\\hat{ W_{t} } - \\lambda d t  $$\n",
+    "Recovering from above the solution for the dynamic of $S_t$ we have: \n",
+    "$$ S_{T}^1\\stackrel{\\mathbb{P}}{=}S_{t}^1\\exp\\left\\{\\left(\\mu-\\frac{\\sigma^2}{2}\\right)(T-t)+\\sigma\\int_{t}^{T}dW_{t}\\right\\} $$\n",
+    "By the Girsanov: \n",
+    "$$ S_{T}^1\\stackrel{\\mathbb{Q}}{=}S_{t}^1\\exp\\left\\{\\left(r-\\frac{\\sigma^2}{2}\\right)(T-t)+\\sigma\\int_{t}^{T}d \\hat{W}_t\\right\\} $$\n",
+    "that is a $\\mathbb{Q}$ dynamic since we have a $\\mathbb{Q}$-Brownian and the drift part only depend on the risk-free rate."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c24c14b7",
+   "metadata": {},
+   "source": [
+    "To enhance mathematical tractability for the Feynman-Kac formula, we standardize the random variable $\\ln S_T^1$ (which is simpler than standardizing $S_T^1$ itself). Under the risk-neutral measure $\\mathbb{Q}$, we have:\n",
+    "\n",
+    "$$\n",
+    "\\ln S_T^1 \\stackrel{\\mathbb{Q}}{=} \\mu^* + \\sigma^* z, \\quad \\text{where} \\quad z \\sim \\mathcal{N}(0,1).\n",
+    "$$\n",
+    "\n",
+    "The parameters are given by the conditional moments of $\\ln S_T^1$ given $\\mathcal{F}_t$:\n",
+    "\n",
+    "$$\n",
+    "\\begin{aligned}\n",
+    "\\mu^*    &= \\mathbb{E}^{\\mathbb{Q}}[\\ln S_T^1 \\mid \\mathcal{F}_t] = \\ln S_t^1 + \\left(r - \\frac{\\sigma^2}{2}\\right)(T-t), \\\\\n",
+    "\\sigma^* &= \\sqrt{\\operatorname{Var}^{\\mathbb{Q}}[\\ln S_T^1 \\mid \\mathcal{F}_t]} = \\sigma \\sqrt{T-t}.\n",
+    "\\end{aligned}\n",
+    "$$\n",
+    "Substituting in the normalization formula and taking the exponential of it we get: \n",
+    "$$ S_{T}^1\\stackrel{=}{}S_{t}^1\\cdot\\exp\\left\\{\\left(r-\\frac{\\sigma^2}{2}\\right)(T-t)+\\sigma\\sqrt{T-t}\\cdot z\\right\\} $$\n",
+    "under $\\mathbb{Q}$. By Feynman-Kac: \n",
+    "$$ \\Gamma\\left(t,S^1_{t}\\right)=\\mathbb{E}^{\\mathbb{Q}}\\left[e^{-r(T-t)}\\cdot \\Gamma\\left(T,S^1_{T}\\right)\\right]= \\frac{1}{\\sqrt{2\\pi}}\\int_{\\varepsilon}^{}\\left(S^1_{T}-K\\right)\\cdot e^{-r(T-t)}\\cdot e^{-\\frac{z^2}{2}}dz $$\n",
+    "Considering that we know $S_t^1$ from the normalization I will substitute it and after some algebraic step I obtain: \n",
+    "$$  = \\frac{1}{\\sqrt{2\\pi}}\\left[ \\int_{\\varepsilon}^{}S_{t}^1\\exp\\left\\{\\sigma\\sqrt{T-t}\\cdot z-\\frac{\\sigma^{2}}{2}(T-t)-\\frac{z^{2}}{2}\\right\\}dz-\\int_{\\varepsilon}Ke^{-r(T-t)}e^{-\\frac{z^{2}}{2}}dz \\right] $$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e5f65387",
+   "metadata": {},
+   "source": [
+    "Let us evaluate the exercise set $  \\varepsilon  $: \n",
+    "$$ \n",
+    "\\varepsilon=\\left\\{S^1_{T}>k\\right\\}=\\left\\{S_{t}^{1} \\exp \\left\\{\\left(r-\\frac{\\sigma^{2}}{2}\\right)(T-t)+\\sigma \\sqrt{T-t} \\cdot z>k\\right\\}\\right.\n",
+    " $$\n",
+    "where I want to isolate z that is normally distributed: \n",
+    "$$ =\\left\\{z>-\\frac{\\ln\\left(\\frac{S_{t}^1}{K}\\right)+\\left(r-\\frac{\\sigma^2}{2}\\right)(T-t)}{-\\sigma\\sqrt{T-t}}\\right\\}=\\left\\{z>-d_2\\right\\} $$\n",
+    "Thus: \n",
+    "$$ F\\left(t,S_{t}\\right)= \\frac{1}{\\sqrt{2\\pi}} \\left[\\int_{-d_2}^{+\\infty}S_{t}^1\\cdot e^{\\frac{\\left(\\sigma^2(T-t)-2\\sigma\\sqrt{T-t}\\cdot z+z^2\\right)}{2}}dz-k\\cdot e^{-r(T-t)}\\int_{-d_2}^{+\\infty}e^{-\\frac{z^{2}}{2}}dz \\right] $$\n",
+    "Let us exploit the simmetry of the Gaussian:\n",
+    "$$ =\\frac{1}{\\sqrt{2\\pi}}\\int_{-d_2}^{+ \\infty}S_{t}^1\\cdot e^{-\\frac{(z-\\sigma\\sqrt{T-t})^2}{2}}dz-K\\cdot e^{-r(T-t)}\\cdot N\\left(d_2\\right) $$\n",
+    "Define $$ X:=z-\\sigma\\sqrt{T-t} $$\n",
+    "Hence $ dx=dz_{} $ with $ z\\longrightarrow{+}\\infty\\Rightarrow x\\longrightarrow{+}\\infty $ and $ z\\longrightarrow{-}d_2\\Rightarrow x\\longrightarrow{-}d_2-\\sigma \\sqrt{T-t} $. The integral becomes: \n",
+    "$$  F\\left(t,S_{t}\\right) = \\frac{1}{\\sqrt{2\\pi}}\\cdot S_{t}^1\\int_{-d_2-\\sigma\\sqrt{T-t}}^{+\\infty}e^{-\\frac{x^2}{2}}dx-K\\cdot e^{-r(T-t)}N\\left(d_2\\right) $$\n",
+    "Exploiting the simmetry of the Standard normal gaussian: \n",
+    "$$ =  S_{t}^1\\cdot\\frac{1}{\\sqrt{2\\pi}}\\cdot\\int_{-\\infty}^{d_2+\\sigma\\sqrt{T-t}}e^{-x^2/2}dx-Ke^{-r(T-t)}N\\left(d_2\\right) $$\n",
+    "Define $d_1 := d_2 + \\sigma \\sqrt{T-t}$: \n",
+    "$$ =  S_{t}^1\\cdot\\frac{1}{\\sqrt{2\\pi}}\\cdot\\int_{-\\infty}^{d_1}e^{-x^2/2}dx-Ke^{-r(T-t)}N\\left(d_2\\right) $$\n",
+    "Finally: \n",
+    "$$F(t,S_t^1) = S_t^1 N(d_1) - Ke^{-r(T-t)}N(d_2)$$"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6b944230",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import datetime as dt\n",
+    "import scipy.stats as st \n",
+    "import numpy as np\n",
+    "pd.set_option('display.float_format', '{:.4f}'.format)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "753f5465",
+   "metadata": {},
+   "source": [
+    "Here we will present the Black-Scholes model code that is pretty straightforward. The first part is just a straightforward computation of $d_1$ and $d_2$ where we have applied the formulas from above. The \"if - else\" statement is useful because it allows us to distringuish between call and puts pricing. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "83ffd497",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def Black_Scholes(S,K,r,T,vol,otype=\"call\"):\n",
+    "    d1 = (np.log(S/K) + (r + 0.5*vol**2) * T) / (vol*np.sqrt(T))\n",
+    "    d2 = d1 - vol*np.sqrt(T)\n",
+    "    \n",
+    "    if otype == \"call\": \n",
+    "        call = S*st.norm.cdf(d1) - K*np.exp(-r*T)*st.norm.cdf(d2)\n",
+    "        return call\n",
+    "    elif otype == \"put\": \n",
+    "        put = K*np.exp(-r*T)*st.norm.cdf(-d2) - S*st.norm.cdf(-d1)\n",
+    "        return put \n",
+    "    else : \n",
+    "        raise ValueError(\"Input must be 'call' or 'put'\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0e3f4468",
+   "metadata": {},
+   "source": [
+    "The Vega function is the Black-Scholes derivative wrt the volatility that is the same for both put and call : \n",
+    "$$ \\mathcal{V}=S_{t}^1\\varphi\\left(d_1\\right)\\sqrt{T-t} $$\n",
+    "Finally, the Historical stock log-return volatility has been annualized that is to say we multiplied by the square root of 252 that is the number of trading days in one year. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "17ccfa8a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def Vega(S,K,r,T,vol): \n",
+    "\n",
+    "    d1 = (np.log(S/K) + (r + 0.5*vol**2) * T) / (vol*np.sqrt(T))\n",
+    "    vega = S * st.norm.pdf(d1) * np.sqrt(T)\n",
+    "    \n",
+    "    return vega \n",
+    "\n",
+    "def Hist_vol_l6m(data):     # Historical log returns volatiliy in the last year \n",
+    "\n",
+    "    data = data.head(128)\n",
+    "    log_ret = np.log(data/data.shift(1)).dropna()\n",
+    "    vol = log_ret.std(axis = 0) * np.sqrt(252)\n",
+    "\n",
+    "    return vol"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e919bb0b",
+   "metadata": {},
+   "source": [
+    "In this project, I collected option data from the **Nasdaq** website:\n",
+    "https://www.nasdaq.com/market-activity/etf/spy/option-chain. \n",
+    "\n",
+    "The dataset was downloaded and processed exclusively for educational and \n",
+    "research purposes within the scope of this project. No redistribution of the raw \n",
+    "data is intended, and no commercial use is made. All rights and ownership of the \n",
+    "original dataset remain with Nasdaq. \n",
+    "\n",
+    "Both call and put options with different features were collected, focusing on maturities spanning a total of 400 days. The data were sampled at daily, weekly, and monthly frequencies. Since the project was developed solely for educational purposes, I treated American options as if they were European, applying the Black-Scholes model. The natural follow-up to this work is the evaluation of plain vanilla American options using the **Cox-Ross-Rubinstein (CRR) model**, which will be considered in the next project.  \n",
+    "\n",
+    "After collecting and processing the data, the implied volatility of each option is computed. Specifically, the **implied volatility** $\\sigma_{Im}$ is defined such that the distance between the market price and the theoretical Black-Scholes price is zero:\n",
+    "\n",
+    "\n",
+    "$$| P_T(\\sigma_{Im}) - P_M \\bigr| = 0$$\n",
+    "\n",
+    "\n",
+    "where $P_T(\\sigma_{Im})$ is the theoretical option price under Black-Scholes using implied volatility $\\sigma_{Im}$, and $P_M$ is the observed market price.  \n",
+    "\n",
+    "However, $\\sigma_{Im}$ cannot be obtained in closed form from the inversion of the Black-Scholes equation, since the equation is transcendental. Therefore, numerical methods are employed. In this project, I use the Newton-Raphson method, which typically converges very quickly to a solution. Nevertheless, for deep in-the-money (ITM) or out-of-the-money (OTM) options, numerical instabilities may arise. This limitation will become even clearer when moving to the CRR method. In that case, instead of obtaining a global volatility surface, I will compute only a **Local** volatility surface, since numerical instabilities naturally lead to NaN or even negative volatility estimates.  "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cc1b5a79",
+   "metadata": {},
+   "source": [
+    "The **loss function** is defined as the absolute pricing error, \n",
+    "distinguishing between calls and puts according to their respective \n",
+    "theoretical price determinations. Formally, the loss is expressed as \n",
+    "the absolute difference between the market price and the Black-Scholes \n",
+    "theoretical price.  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0d16ed12",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def Loss(S,K,r,T,vol,opt_price, otype = \"call\"):    # Loss function\n",
+    "\n",
+    "    if otype == \"call\": \n",
+    "        Th_price = Black_Scholes(S,K,r,T,vol,otype = \"call\")\n",
+    "    else: \n",
+    "        Th_price = Black_Scholes(S,K,r,T,vol,otype = \"put\")\n",
+    "    \n",
+    "    loss = Th_price - opt_price\n",
+    "\n",
+    "    return loss"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6a1d52a2",
+   "metadata": {},
+   "source": [
+    "Once the loss function is defined, we can apply the **Newton-Raphson** \n",
+    "algorithm, which is based on the following recursive scheme:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2f6ef703",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def Newton_Ramphson_BS(Stock_price, Market_price, Strike, r, T, vol_guess, N_iter, epsilon, otype):    # The stock price is a number\n",
+    "\n",
+    "    sigma = vol_guess\n",
+    "\n",
+    "    for _ in range(N_iter): \n",
+    "\n",
+    "        if otype == \"call\" : \n",
+    "            loss = Loss(Stock_price,Strike,r,T,sigma,Market_price,otype = \"call\")\n",
+    "            der_loss = Vega(Stock_price,Strike,r,T,sigma)\n",
+    "\n",
+    "        else: \n",
+    "            loss = Loss(Stock_price,Strike,r,T,sigma,Market_price,otype = \"put\")\n",
+    "            der_loss = Vega(Stock_price,Strike,r,T,sigma)            \n",
+    "\n",
+    "        if abs(loss) < epsilon: \n",
+    "            break \n",
+    "\n",
+    "        sigma = sigma - loss / der_loss\n",
+    "    \n",
+    "    return sigma"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2a9b8ebd",
+   "metadata": {},
+   "source": [
+    "where $\\mathbb{L}(\\sigma)$ denotes the loss function introduced above, \n",
+    "and $\\mathbb{L}'(\\sigma)$ represents its derivative with respect to \n",
+    "volatility $\\sigma$, i.e. the option Vega. \n",
+    "\n",
+    "The procedure starts with an initial guess for volatility, $\\sigma_0$, which is iteratively updated until convergence. The steps are:\n",
+    "\n",
+    "1. **Compute the loss function** (pricing error) and its derivative (Vega), distinguishing between calls and puts.  \n",
+    "   \n",
+    "2. **Check convergence**:  \n",
+    "   - If the absolute error between the theoretical and market price is sufficiently small, the algorithm terminates and the current estimate of volatility is taken as the implied volatility.  \n",
+    "   \n",
+    "3. **Update volatility**:  \n",
+    "   - If the error is still significant, the Newton–Raphson recursive update is applied:  \n",
+    "\n",
+    "   $$\n",
+    "   \\sigma_{n+1} = \\sigma_n - \\frac{\\mathbb{L}(\\sigma_n)}{\\mathbb{L}'(\\sigma_n)} ,\n",
+    "   $$\n",
+    "\n",
+    "   where $\\mathbb{L}(\\sigma)$ is the loss function and $\\mathbb{L}'(\\sigma)$ is its derivative with respect to $\\sigma$ (i.e., Vega).  \n",
+    "\n",
+    "4. **Repeat**:  \n",
+    "   - The loop continues until the difference between market and theoretical price is minimized within a predefined tolerance.  \n",
+    "\n",
+    "\n",
+    "Once collected all the implied volatilities I can plot the volatility surface: \n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1d09884d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from scipy.interpolate import griddata\n",
+    "import plotly.graph_objects as go\n",
+    "\n",
+    "# Replace with your data\n",
+    "\n",
+    "Moneyness = []\n",
+    "Time_to_maturity = []\n",
+    "Implied_volatility = []\n",
+    "\n",
+    "X = Moneyness \n",
+    "Y = Time_to_maturity \n",
+    "Z = Implied_volatility\n",
+    "\n",
+    "xi = np.linspace(min(X),max(X) , 50)    # I create a 1D array from the min to the max and with 50 points in-between \n",
+    "yi = np.linspace(min(Y),max(Y), 50 )\n",
+    "Xi , Yi = np.meshgrid(xi,yi)            # It creates a 2D array where Xi contains the x coordinates and Yi the y coordinates \n",
+    "\n",
+    "Zi = griddata((X,Y) , Z , (Xi,Yi), method=\"cubic\")  # It takes the starting dataset X,Y,Z putting them in the greed created above and interpolate points through cubic interpolation\n",
+    "\n",
+    "# Create interactive surface plot\n",
+    "\n",
+    "fig = go.Figure(data=[go.Surface(\n",
+    "    x=Xi, y=Yi, z=Zi,\n",
+    "    colorscale=\"Plasma\",\n",
+    "    opacity=0.9\n",
+    ")])\n",
+    "\n",
+    "fig.update_layout(\n",
+    "    scene=dict(\n",
+    "        xaxis_title=\"Moneyness\",\n",
+    "        yaxis_title=\"Time to Maturity (Days)\",\n",
+    "        zaxis_title=\"Implied Volatility\"\n",
+    "    ),\n",
+    "    width=900,\n",
+    "    height=700\n",
+    ")\n",
+    "\n",
+    "fig.show(renderer=\"notebook\") "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "13d80241",
+   "metadata": {},
+   "source": [
+    "where the Moneyness is simply the strike price divided by the underlying price. The resulting plot will be interactive: \n",
+    "![Volatility Surface](Vol_surface_European.jpg)\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "finance",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+
+}
