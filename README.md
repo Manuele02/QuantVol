@@ -1,9 +1,24 @@
 # QuantVol
-A Python-based toolkit for analyzing options volatility, including model implementation (Black-Scholes and CRR), implied volatility calculation, volatility surface visualization, and related trading strategies. 
-## Features 
-- **Black-Scholes model** : Price European options using the standard Black-Scholes formula.
-- **CRR (Cox-Ross-Rubinsten) model** : Price American options using CRR
-- **Volatility Surface Visualization:** Generate and plot 3D volatility surfaces across strikes and maturities.
-- **Trading strategies**
 
-**Disclaimer:** This project is developed by a quantitative finance student as an educational endeavor. It is not intended for financial advice or use in live trading. Always verify models and code before applying them to real-world decisions.
+**QuantVol** is a Python-based toolkit designed for exploring and analyzing options volatility. It provides implementations of popular option pricing models, tools for calculating implied volatility, visualizing volatility surfaces, and testing related trading strategies. This project is ideal for students, researchers, and anyone interested in quantitative finance.
+
+## Features 
+
+- **Black-Scholes Model**: Price European options using the classic Black-Scholes formula.  
+- **CRR (Cox-Ross-Rubinstein) Model**: Price American options through a flexible binomial tree approach.  
+- **Volatility Surface Visualization**: Generate and plot 3D volatility surfaces across strikes and maturities for deeper market insight.  
+- **Trading Strategies**: Explore strategies based on volatility modeling and options pricing.  
+
+## References 📚
+
+This project builds on the theoretical foundations and practical insights from:  
+- **Bjork, T. – *Arbitrage Theory in Continuous Time***  
+- **Hull, J. – *Options, Futures, and Other Derivatives***  
+
+These texts provide the backbone for the models and methods implemented in QuantVol.  
+
+## Disclaimer  
+
+This project is developed by a quantitative finance student as an **educational tool**. It is **not financial advice** and should **not be used for live trading**. Always verify models and code rigorously before applying them to real-world decisions.
+
+
