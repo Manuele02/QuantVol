@@ -1,13 +1,12 @@
 # QuantVol
 
-**QuantVol** is a Python-based toolkit designed for exploring and analyzing options volatility. It provides implementations of popular option pricing models, tools for calculating implied volatility, visualizing volatility surfaces, and testing related trading strategies. This project is ideal for students, researchers, and anyone interested in quantitative finance.
+**QuantVol** is a Python-based toolkit designed for exploring and analyzing options volatility. It provides implementations of popular option pricing models, tools for calculating implied volatility,and visualizing volatility surfaces
 
 ## Features 
 
 - **Black-Scholes Model**: Price European options using the classic Black-Scholes formula.  
 - **CRR (Cox-Ross-Rubinstein) Model**: Price American options through a flexible binomial tree approach.  
 - **Volatility Surface Visualization**: Generate and plot 3D volatility surfaces across strikes and maturities for deeper market insight.  
-- **Trading Strategies**: Explore strategies based on volatility modeling and options pricing.  
 
 ## References 📚
 
